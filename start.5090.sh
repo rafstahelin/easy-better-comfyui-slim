@@ -10,6 +10,24 @@ DB_FILE="/workspace/madapps/filebrowser.db"
 #                          Function Definitions                                  #
 # ---------------------------------------------------------------------------- #
 
+# Build CONFIG bashrc (if available on network volume)
+build_config_bashrc() {
+    if [ -f /workspace/CONFIG/bashrc/deploy/build-bashrc.sh ]; then
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "🔧 Building CONFIG Bashrc"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        /workspace/CONFIG/bashrc/deploy/build-bashrc.sh > /root/.bashrc
+        echo "✅ CONFIG bashrc installed"
+        echo ""
+    else
+        echo "⚠️  CONFIG bashrc not found (skipping)"
+        # Create minimal bashrc
+        echo '# Minimal bashrc for ComfyUI pod' > /root/.bashrc
+        echo 'export PATH="/usr/local/cuda/bin:$PATH"' >> /root/.bashrc
+        echo 'export LD_LIBRARY_PATH="/usr/local/cuda/lib64:$LD_LIBRARY_PATH"' >> /root/.bashrc
+    fi
+}
+
 # Setup SSH with optional key or random password
 setup_ssh() {
     mkdir -p ~/.ssh
@@ -200,6 +218,7 @@ start_zasper() {
 # ---------------------------------------------------------------------------- #
 
 # Setup environment
+build_config_bashrc  # Build CONFIG bashrc FIRST (before env vars)
 setup_ssh
 export_env_vars
 setup_easy_cli
@@ -220,6 +239,21 @@ fi
 # Start FileBrowser
 echo "Starting FileBrowser on port 8080..."
 nohup filebrowser &> /filebrowser.log &
+
+# Start code-server (Claude Code)
+if command -v code-server &> /dev/null; then
+    echo "Starting code-server (Claude Code) on port 8443..."
+    mkdir -p /root/.config/code-server
+    cat > /root/.config/code-server/config.yaml <<EOF
+bind-addr: 0.0.0.0:8443
+auth: none
+cert: false
+EOF
+    nohup code-server /workspace &> /code-server.log &
+    echo "✅ Code-server started"
+else
+    echo "⚠️  code-server not found (skipping)"
+fi
 
 start_zasper
 
