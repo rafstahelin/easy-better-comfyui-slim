@@ -61,20 +61,21 @@ export_env_vars() {
     > "$SSH_ENV_DIR"
     
     # Export to multiple locations for maximum compatibility
-    printenv | grep -E '^RUNPOD_|^PATH=|^_=|^CUDA|^LD_LIBRARY_PATH|^PYTHONPATH' | while read -r line; do
+    # Include Easy CLI API keys and tokens
+    printenv | grep -E '^RUNPOD_|^PATH=|^_=|^CUDA|^LD_LIBRARY_PATH|^PYTHONPATH|^HF_API_TOKEN|^CIVITAI_API_TOKEN|^GITHUB_TOKEN|^ANTHROPIC_API_KEY|^GEMINI_API_KEY|^GROQ_API_KEY|^CEREBRAS_API_KEY|^OPENROUTER_API_KEY|^DEEPSEEK_API_KEY' | while read -r line; do
         # Get variable name and value
         name=$(echo "$line" | cut -d= -f1)
         value=$(echo "$line" | cut -d= -f2-)
-        
+
         # Add to /etc/environment (system-wide)
         echo "$name=\"$value\"" >> "$ENV_FILE"
-        
+
         # Add to PAM environment
         echo "$name DEFAULT=\"$value\"" >> "$PAM_ENV_FILE"
-        
+
         # Add to SSH environment file
         echo "$name=\"$value\"" >> "$SSH_ENV_DIR"
-        
+
         # Add to current shell
         echo "export $name=\"$value\"" >> /etc/rp_environment
     done
