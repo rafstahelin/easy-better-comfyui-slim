@@ -89,6 +89,104 @@ export_env_vars() {
     chmod 600 "$SSH_ENV_DIR"
 }
 
+# Setup Easy CLI integrations (rclone, HF, GitHub, Git config)
+setup_easy_cli() {
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "🎨 Easy CLI Setup - Automated Configuration"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+
+    # 1. Setup rclone (copy from workspace volume - already there permanently)
+    if [ -f /workspace/rclone.conf ]; then
+        echo "📦 Setting up rclone..."
+        mkdir -p /root/.config/rclone
+        cp /workspace/rclone.conf /root/.config/rclone/rclone.conf
+        chmod 600 /root/.config/rclone/rclone.conf
+        echo "✅ Rclone configured (dbx profile)"
+    else
+        echo "⚠️  No rclone.conf found at /workspace/rclone.conf"
+        echo "💡 Upload your rclone.conf to the network volume at /workspace/rclone.conf"
+    fi
+
+    echo ""
+
+    # 2. Setup Hugging Face CLI
+    if [ -n "$HF_API_TOKEN" ]; then
+        echo "🤗 Setting up Hugging Face CLI..."
+        if command -v hf &> /dev/null; then
+            hf auth login --token "$HF_API_TOKEN" --add-to-git-credential 2>/dev/null && \
+                echo "✅ Hugging Face CLI authenticated" || \
+                echo "⚠️  Hugging Face CLI authentication failed"
+        else
+            echo "📥 Installing Hugging Face CLI..."
+            pip install --no-cache-dir "huggingface_hub[cli]" > /dev/null 2>&1 && \
+                echo "✅ Hugging Face CLI installed" || \
+                echo "❌ Failed to install Hugging Face CLI"
+
+            if command -v hf &> /dev/null; then
+                hf auth login --token "$HF_API_TOKEN" --add-to-git-credential 2>/dev/null && \
+                    echo "✅ Hugging Face CLI authenticated" || \
+                    echo "⚠️  Hugging Face CLI authentication failed"
+            fi
+        fi
+    else
+        echo "⚠️  HF_API_TOKEN not set in environment"
+    fi
+
+    echo ""
+
+    # 3. Setup Git config (common for all methods)
+    echo "🔧 Setting up Git configuration..."
+    git config --global user.name "rafstahelin"
+    git config --global user.email "64715158+rafstahelin@users.noreply.github.com"
+    echo "✅ Git config set"
+
+    echo ""
+
+    # 4. Setup GitHub credentials (SSH or HTTPS)
+    echo "🔐 Setting up GitHub credentials..."
+
+    # Method 1: SSH Private Key (preferred - more secure)
+    SSH_KEY="${SSH_PRIVATE_KEY_BASE64:-$RUNPOD_SECRET_SSH_PRIVATE_KEY_BASE64}"
+    if [ -n "$SSH_KEY" ]; then
+        echo "Setting up SSH authentication..."
+        mkdir -p /root/.ssh
+        chmod 700 /root/.ssh
+
+        # Decode and install SSH key
+        echo "$SSH_KEY" | base64 -d > /root/.ssh/id_ed25519
+        chmod 600 /root/.ssh/id_ed25519
+
+        # Add GitHub to known_hosts
+        ssh-keyscan -H github.com >> /root/.ssh/known_hosts 2>/dev/null
+
+        echo "✅ GitHub SSH credentials configured"
+
+    # Method 2: HTTPS Token (fallback)
+    elif [ -n "$GITHUB_TOKEN" ]; then
+        echo "Setting up HTTPS authentication..."
+
+        # Configure credential helper
+        git config --global credential.helper store
+
+        # Store credentials for HTTPS
+        echo "https://rafstahelin:${GITHUB_TOKEN}@github.com" > /root/.git-credentials
+        chmod 600 /root/.git-credentials
+
+        echo "✅ GitHub HTTPS credentials configured"
+
+    else
+        echo "⚠️  Neither SSH_PRIVATE_KEY_BASE64 nor GITHUB_TOKEN set"
+        echo "💡 GitHub authentication is optional for ComfyUI pods"
+    fi
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "✅ Easy CLI setup complete!"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+}
+
 # Start Zasper
 start_zasper() {
     mkdir -p /workspace
@@ -104,6 +202,7 @@ start_zasper() {
 # Setup environment
 setup_ssh
 export_env_vars
+setup_easy_cli
 
 # Initialize FileBrowser if not already done
 if [ ! -f "$DB_FILE" ]; then
