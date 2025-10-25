@@ -50,11 +50,16 @@ RUN apt-get update && \
 # Install FileBrowser
 RUN curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash
 
-# Install code-server (Claude Code)
+# Install code-server (Claude Code) - browser-based VS Code
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 
-# Set CUDA environment variables
-ENV PATH=/usr/local/cuda/bin:${PATH}
+# Create symlinks for Claude CLI (if already installed on network volume)
+RUN mkdir -p /usr/local/bin && \
+    ln -sf /workspace/tools/node/bin/node /usr/local/bin/node 2>/dev/null || true && \
+    ln -sf /workspace/tools/npm-global/bin/claude /usr/local/bin/claude 2>/dev/null || true
+
+# Set CUDA environment variables and add tools to PATH
+ENV PATH=/usr/local/cuda/bin:/workspace/tools/node/bin:/workspace/tools/npm-global/bin:${PATH}
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:${LD_LIBRARY_PATH:-}
 
 # Install Zasper webapp

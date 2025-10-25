@@ -23,9 +23,11 @@ build_config_bashrc() {
         echo "⚠️  CONFIG bashrc not found (skipping)"
         # Create minimal bashrc
         echo '# Minimal bashrc for ComfyUI pod' > /root/.bashrc
-        echo 'export PATH="/usr/local/cuda/bin:$PATH"' >> /root/.bashrc
-        echo 'export LD_LIBRARY_PATH="/usr/local/cuda/lib64:$LD_LIBRARY_PATH"' >> /root/.bashrc
     fi
+
+    # Add tools to PATH (for Claude CLI and code-server if installed on network volume)
+    echo 'export PATH="/usr/local/cuda/bin:/workspace/tools/node/bin:/workspace/tools/npm-global/bin:$PATH"' >> /root/.bashrc
+    echo 'export LD_LIBRARY_PATH="/usr/local/cuda/lib64:$LD_LIBRARY_PATH"' >> /root/.bashrc
 }
 
 # Setup SSH with optional key or random password
