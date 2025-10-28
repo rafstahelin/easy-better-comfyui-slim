@@ -267,8 +267,17 @@ if [ ! -f "$ARGS_FILE" ]; then
 fi
 
 # Setup ComfyUI if needed
-if [ ! -d "$COMFYUI_DIR" ] || [ ! -d "$VENV_DIR" ]; then
+# Check if venv is valid (directory exists AND activate script exists)
+if [ ! -d "$COMFYUI_DIR" ] || [ ! -d "$VENV_DIR" ] || [ ! -f "$VENV_DIR/bin/activate" ]; then
     echo "First time setup: Installing ComfyUI and dependencies..."
+
+    # If venv directory exists but is broken, remove it
+    if [ -d "$VENV_DIR" ] && [ ! -f "$VENV_DIR/bin/activate" ]; then
+        echo "⚠️  Detected broken venv (directory exists but activate script missing)"
+        echo "Removing broken venv at $VENV_DIR..."
+        rm -rf "$VENV_DIR"
+        echo "✅ Broken venv removed"
+    fi
     
     # Clone ComfyUI if not present
     if [ ! -d "$COMFYUI_DIR" ]; then
