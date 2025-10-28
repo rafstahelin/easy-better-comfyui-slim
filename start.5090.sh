@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e  # Exit the script if any statement returns a non-true return value
 
-COMFYUI_DIR="/workspace/madapps/ComfyUI"
+COMFYUI_DIR="/workspace/ComfyUI"
 VENV_DIR="$COMFYUI_DIR/.venv"
 FILEBROWSER_CONFIG="/root/.config/filebrowser/config.json"
 DB_FILE="/workspace/madapps/filebrowser.db"
