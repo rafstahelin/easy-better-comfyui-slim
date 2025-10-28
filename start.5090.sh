@@ -238,6 +238,10 @@ else
     echo "Using existing FileBrowser configuration..."
 fi
 
+# Always ensure noauth is set (in case DB was migrated from old config)
+echo "Ensuring FileBrowser noauth is enabled..."
+filebrowser config set --auth.method=noauth
+
 # Start FileBrowser
 echo "Starting FileBrowser on port 8080..."
 nohup filebrowser &> /filebrowser.log &
@@ -255,6 +259,16 @@ EOF
     echo "✅ Code-server started"
 else
     echo "⚠️  code-server not found (skipping)"
+fi
+
+# Start Jupyter Lab
+if command -v jupyter &> /dev/null; then
+    echo "Starting Jupyter Lab on port 8888..."
+    mkdir -p /workspace/.jupyter
+    nohup jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password='' --notebook-dir=/workspace &> /jupyter.log &
+    echo "✅ Jupyter Lab started"
+else
+    echo "⚠️  Jupyter not found (skipping)"
 fi
 
 start_zasper
