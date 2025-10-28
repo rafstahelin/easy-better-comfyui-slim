@@ -68,8 +68,8 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/
     mkdir -p /run/sshd
 
 # Create workspace directory
-RUN mkdir -p /workspace/madapps
-WORKDIR /workspace/madapps
+RUN mkdir -p /workspace
+WORKDIR /workspace
 
 # Expose ports
 EXPOSE 8188 22 8048 8080
