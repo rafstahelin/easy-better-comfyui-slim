@@ -3,7 +3,7 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV IMAGEIO_FFMPEG_EXE=/usr/bin/ffmpeg
-ENV FILEBROWSER_CONFIG=/workspace/madapps/.filebrowser.json
+ENV FILEBROWSER_CONFIG=/workspace/.filebrowser.json
 
 # Update and install minimal dependencies, CUDA, and common tools
 RUN apt-get update && \
