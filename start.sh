@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e  # Exit the script if any statement returns a non-true return value
 
-COMFYUI_DIR="/workspace/madapps/ComfyUI"
+COMFYUI_DIR="/workspace/ComfyUI"
 VENV_DIR="$COMFYUI_DIR/.venv"
 FILEBROWSER_CONFIG="/root/.config/filebrowser/config.json"
-DB_FILE="/workspace/madapps/filebrowser.db"
+DB_FILE="/workspace/filebrowser.db"
 
 # ---------------------------------------------------------------------------- #
 #                          Function Definitions                                  #
@@ -124,7 +124,7 @@ nohup filebrowser &> /filebrowser.log &
 start_zasper
 
 # Create default comfyui_args.txt if it doesn't exist
-ARGS_FILE="/workspace/madapps/comfyui_args.txt"
+ARGS_FILE="/workspace/ComfyUI/comfyui_args.txt"
 if [ ! -f "$ARGS_FILE" ]; then
     echo "# Add your custom ComfyUI arguments here (one per line)" > "$ARGS_FILE"
     echo "Created empty ComfyUI arguments file at $ARGS_FILE"
@@ -136,7 +136,7 @@ if [ ! -d "$COMFYUI_DIR" ] || [ ! -d "$VENV_DIR" ]; then
     
     # Clone ComfyUI if not present
     if [ ! -d "$COMFYUI_DIR" ]; then
-        cd /workspace/madapps
+        cd /workspace
         git clone https://github.com/comfyanonymous/ComfyUI.git
     fi
     
@@ -254,16 +254,16 @@ if [ -s "$ARGS_FILE" ]; then
     CUSTOM_ARGS=$(grep -v '^#' "$ARGS_FILE" | tr '\n' ' ')
     if [ ! -z "$CUSTOM_ARGS" ]; then
         echo "Starting ComfyUI with additional arguments: $CUSTOM_ARGS"
-        nohup python main.py $FIXED_ARGS $CUSTOM_ARGS &> /workspace/madapps/comfyui.log &
+        nohup python main.py $FIXED_ARGS $CUSTOM_ARGS &> /workspace/ComfyUI/comfyui.log &
     else
         echo "Starting ComfyUI with default arguments"
-        nohup python main.py $FIXED_ARGS &> /workspace/madapps/comfyui.log &
+        nohup python main.py $FIXED_ARGS &> /workspace/ComfyUI/comfyui.log &
     fi
 else
     # File is empty, use only fixed args
     echo "Starting ComfyUI with default arguments"
-    nohup python main.py $FIXED_ARGS &> /workspace/madapps/comfyui.log &
+    nohup python main.py $FIXED_ARGS &> /workspace/ComfyUI/comfyui.log &
 fi
 
 # Tail the log file
-tail -f /workspace/madapps/comfyui.log
+tail -f /workspace/ComfyUI/comfyui.log
