@@ -265,7 +265,16 @@ fi
 if command -v jupyter &> /dev/null; then
     echo "Starting Jupyter Lab on port 8888..."
     mkdir -p /workspace/.jupyter
-    nohup jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password='' --notebook-dir=/workspace &> /jupyter.log &
+
+    # Use JUPYTER_PASSWORD env var if set, otherwise no password
+    if [ -n "$JUPYTER_PASSWORD" ]; then
+        echo "Starting Jupyter with password authentication..."
+        nohup jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password="$JUPYTER_PASSWORD" --notebook-dir=/workspace &> /jupyter.log &
+    else
+        echo "Starting Jupyter without password (noauth)..."
+        nohup jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password='' --notebook-dir=/workspace &> /jupyter.log &
+    fi
+
     echo "✅ Jupyter Lab started"
 else
     echo "⚠️  Jupyter not found (skipping)"
